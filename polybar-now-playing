@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+import dbus
+import signal
+import time
+from unicodedata import east_asian_width
+
+# ADD error handling
+# handle cases where player quits
+
+current_player = None
+player_names = None
+players = None
+message = None
+display_text=""
+message_display_len = 20
+# display_suffix = "%{A:notify-send YAY!:}CLICK%{A}"
+
+display_suffix = ""
+
+session_bus = dbus.SessionBus()
+
+def get_status(player):
+    status = player.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus', dbus_interface='org.freedesktop.DBus.Properties')
+    return status
+
+def get_metadata(player):
+    metadata = player.Get('org.mpris.MediaPlayer2.Player', 'Metadata', dbus_interface='org.freedesktop.DBus.Properties')
+    return metadata
+
+def update_suffix(player_name, status):
+    global display_suffix
+    # next_button = "%%{A:notify-send %s:}%%{A}"%(player_name)
+    # prev_button = "%%{A:notify-send %s:}%%{A}"%(player_name)
+    # play_button = "%%{A:notify-send %s:}%%{A}"%(player_name)
+    # pause_button = "%%{A:notify-send %s:}%%{A}"%(player_name)
+    player_option = ""
+    if player_name != "":
+        player_option = "-p " + player_name
+
+    next_button = "%%{A:playerctl %s next :}%%{A}"%(player_option)
+    prev_button = "%%{A:playerctl %s previous :}%%{A}"%(player_option)
+    play_button = "%%{A:playerctl %s play :}%%{A}"%(player_option)
+    pause_button = "%%{A:playerctl  %s pause :}%%{A}"%(player_option)
+
+    suffix = "| " + prev_button
+    if status == "Playing":
+        suffix += " "+pause_button
+    else:
+        suffix += " "+play_button
+    suffix += " "+next_button
+    # print(suffix)
+    display_suffix = suffix
+
+def update_players():
+    global player_names, players, session_bus
+    player_names = [service  for service in session_bus.list_names() if service.startswith('org.mpris.MediaPlayer2.')]
+    players = [session_bus.get_object(service, '/org/mpris/MediaPlayer2') for service in player_names]
+
+def handle_event(*args):
+    global current_player, players
+    update_players()
+    if len(players) == 0:
+        pass
+    current_player += 1
+    current_player %= len(players)
+#    print("SIGUSR1: updated values - current_player = %d  players len = %d"%(current_player,len(players)))
+
+def update_message():
+    global players, current_player,player_names, message, display_text, message_display_len, display_suffix
+    if len(players) == 0:
+        tmp_message = "No Player avialable"
+        update_suffix("","")
+    else:
+        # error if current_player points to non existent player
+        name = ".".join(player_names[current_player].split(".")[3:])
+        status = get_status(players[current_player])
+        metadata_obj = get_metadata(players[current_player])
+        metadata_string = str(metadata_obj.get("xesam:title")) + " - " + metadata_obj.get("xesam:artist")[0] + " "
+        if not metadata_string:
+            metadata_string =  "No Title"
+        update_suffix(name,status)
+        tmp_message = "" #.join([name, status])
+        if metadata_string:
+            tmp_message += str(metadata_string)
+    if message != tmp_message:
+        message = tmp_message
+        display_text = message
+
+def scroll():
+    global display_text, message_display_len
+    if len(display_text) > message_display_len:
+        display_text = display_text[1:] + display_text[0]
+    elif len(display_text) < message_display_len:
+        display_text += " "*(message_display_len - len(display_text))
+
+def visual_len(text):
+    visual_length = 0
+    for ch in text:
+        width = east_asian_width(ch)
+        if width == 'W' or width == 'F':
+            visual_length += 1
+        visual_length += 1
+    return visual_length
+
+def make_visual_len(text, visual_desired_length):
+    visual_length = 0
+    altered_text = ''
+    for char in text:
+        if visual_length < visual_desired_length:
+            width = east_asian_width(char)
+            if width == 'W' or width == 'F':
+                visual_length += 2
+            else:
+                visual_length += 1
+            altered_text += char
+        else:
+            break
+    if visual_length == visual_desired_length + 1:
+        altered_text = altered_text[:-1] + ' '
+    elif visual_length < visual_desired_length:
+        altered_text += ' ' * (visual_desired_length - visual_length)
+    return altered_text
+
+def print_text():
+    global display_text, message_display_len, players, player_names
+    scroll()
+    print("%{T1}"+make_visual_len(display_text, message_display_len) + "%{T-}" + display_suffix, flush=True)
+
+def main():
+    global current_player, players
+    update_players()
+    current_player = 0
+    while True:
+        time.sleep(0.5)
+        update_players()
+        update_message()
+        print_text()
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGUSR1, handle_event)
+    main()
