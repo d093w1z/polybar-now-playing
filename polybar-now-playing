@@ -28,6 +28,12 @@ display_player_prefix = {
     "default":  ''
 }
 
+# (list) : list of metadata fields based on mpris sepecification.
+# For more details/ field names, refer [mpris sepecification](https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/)
+metadata_fields = ["xesam:title", "xesam:album"]
+
+# (char) : separator for metadata fields
+metadata_separator = "-"
 
 # Defult initialization
 current_player = None
@@ -120,21 +126,19 @@ def handle_event(*args):
 def update_message():
     global players, current_player,player_names, message, display_text, message_display_len, display_suffix, last_player_name
     if len(players) == 0:
-        tmp_message = "No Player avialable"
+        tmp_message = "No player avialable"
         update_prefix_suffix()
     else:
         name = get_name_by_index(current_player)
         status = get_status(players[current_player])
         metadata_obj = get_metadata(players[current_player])
-        title = metadata_obj.get("xesam:title")
-        artist = metadata_obj.get("xesam:artist")
-        if not title:
-            title =  "No Title"
-        if not artist:
-            artist =  "No Artist"
-        else:
-            artist = artist[0]
-        metadata_string = title + " - " + artist
+        metadata_string_list = []
+        for field in metadata_fields:
+            result = metadata_obj.get(field)
+            if not result:
+                result = "No "+field.split(":")[1]
+            metadata_string_list.append(result)
+        metadata_string = (" "+metadata_separator+" ").join(metadata_string_list)
         if visual_len(metadata_string) > message_display_len:
             metadata_string = " " + metadata_string + " |"
         update_prefix_suffix(name,status)
