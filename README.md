@@ -2,10 +2,12 @@
 Script for polybar to display and control media(not only Spotify) using DBus
 
 Python script to display and control current playing media. Includes a way to switch between players.
-Scrolling text used for metadata(title and artist) and playback button based on [spotify-polybar](https://github.com/PrayagS/polybar-spotify) and [zscroll](https://github.com/noctuid/zscroll).
+Scrolling text used for metadata(title, artist, album, etc.) and playback button based on [spotify-polybar](https://github.com/PrayagS/polybar-spotify) and [zscroll](https://github.com/noctuid/zscroll).
 
 #### Demo:
 ![demo](demo.gif)
+
+![demo](demo2.gif)
 
 ![screenshot](screenshot.png)
 
@@ -15,9 +17,10 @@ Scrolling text used for metadata(title and artist) and playback button based on 
 - [playerctl](https://github.com/altdesktop/playerctl): Required to control players
 - [dbus-python](https://pypi.org/project/dbus-python/): python module required to interact with [DBus](https://www.freedesktop.org/wiki/Software/dbus/) message bus system
 
-### Setup
+### Setup & Configuration
 - This script requires a monospace font to work as expected, so adding a monospace font to your polybar config is adviced. After adding the font, update the index in `polybar-now-playing` file where indicated.
 Font indices are 1-based so be careful, refer [polybar:Fonts](https://github.com/polybar/polybar/wiki/Fonts#fonts).
+- Format of playing track/media details by default is "title - artist". It can be changed by specifying respective field names in `metadata_fields` list. For more details/ field names, refer [mpris sepecification](https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/).
 
 ```python3
 # Config options
@@ -35,7 +38,8 @@ font_index = <font index defined in polybar config> + 1
 update_delay = 0.3
 
 # (list) : list of chars containing previous, play, pause, next glyphs
-# for media controls in respective order
+# for media controls in respective order.
+# example:
 control_chars = ['','','','']
 
 # (dict) : dict of char icons to display as prefix.
@@ -47,6 +51,12 @@ display_player_prefix = {
     "firefox":  '',
     "default":  ''
 }
+
+# (list) : list of metadata fields based on mpris sepecification.
+metadata_fields = ["xesam:title", "xesam:artist"]
+
+# (char) : separator for metadata fields
+metadata_separator = "-"
 ```
 
 - After setting the options, add the following to your polybar config.
