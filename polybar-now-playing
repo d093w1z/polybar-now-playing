@@ -30,7 +30,7 @@ display_player_prefix = {
 
 # (list) : list of metadata fields based on mpris sepecification.
 # For more details/ field names, refer [mpris sepecification](https://www.freedesktop.org/wiki/Specifications/mpris-spec/metadata/)
-metadata_fields = ["xesam:title", "xesam:album"]
+metadata_fields = ["xesam:title", "xesam:artist"]
 
 # (char) : separator for metadata fields
 metadata_separator = "-"
@@ -135,9 +135,11 @@ def update_message():
         metadata_string_list = []
         for field in metadata_fields:
             result = metadata_obj.get(field)
+            if type(result) == dbus.Array:
+                result = result[0]
             if not result:
                 result = "No "+field.split(":")[1]
-            metadata_string_list.append(result)
+            metadata_string_list.append(str(result))
         metadata_string = (" "+metadata_separator+" ").join(metadata_string_list)
         if visual_len(metadata_string) > message_display_len:
             metadata_string = " " + metadata_string + " |"
