@@ -70,3 +70,11 @@ format = <label>
 exec = <path/to/script>
 click-right = "kill -USR1 $(pgrep --oldest --parent %pid%)"
 ```
+#### Warning:
+In the click-right field of polybar config, for some setups the given line **does not work**([#2](https://github.com/d093w1z/polybar-now-playing/issues/2)). It works only when polybar runs custom script exec fields as subprocesses using sh, not if it runs them directly(Refer to this for more info(see the Note): [Config#examples](https://github.com/polybar/polybar/wiki/Module:-script#examples)). You can make it work by using the following line:
+
+`click-right = "kill -USR1 %pid%"`
+
+### Useful notes:
+This project was meant as a quick fix, rather than a permanent solution.
+As this is a Python script, it requires some time to execute. I wouldn't call it a fast solution but it's speed of execution depends on the hardware and software setup of the indivudual. If in future this is ported to C/C++ then the performance can be improved drastically.
