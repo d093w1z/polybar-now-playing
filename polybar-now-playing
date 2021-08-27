@@ -35,6 +35,9 @@ metadata_fields = ["xesam:title", "xesam:artist"]
 # (char) : separator for metadata fields
 metadata_separator = "-"
 
+# (bool) : Hide text when no player is available? True disables the output for no players.
+hide_output = False
+
 # Defult initialization
 current_player = None
 player_names = None
@@ -190,6 +193,9 @@ def make_visual_len(text, visual_desired_length):
 
 def print_text():
     global display_text, message_display_len, players, player_names, display_prefix, display_suffix
+    if hide_output and len(players)==0:
+        print("", flush = True)
+        return
     scroll()
     print(display_prefix + " " +
         "%%{T%d}" % (font_index) +
