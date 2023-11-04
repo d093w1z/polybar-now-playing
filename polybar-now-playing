@@ -23,8 +23,8 @@ control_chars = ['','','','']
 # else default key value.
 # example:
 display_player_prefix = {
-    "spotify":  '',
-    "firefox":  '',
+    "spotify":  '%{A:i3-msg "[class=\"Spotify\"] focus":}%{A}',
+    "firefox":  '%{A:i3-msg "[class=\"firefox\"] focus":}%{A}',
     "default":  ''
 }
 
