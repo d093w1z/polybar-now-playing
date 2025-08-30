@@ -138,9 +138,9 @@ def update_message():
         metadata_string_list = []
         for field in metadata_fields:
             result = metadata_obj.get(field)
-            if type(result) == dbus.Array:
+            if type(result) == dbus.Array and len(result) > 0:
                 result = result[0]
-            if not result:
+            if not result or (type(result) == dbus.Array and len(result) == 0):
                 result = "No "+field.split(":")[1]
             metadata_string_list.append(str(result))
         metadata_string = (" "+metadata_separator+" ").join(metadata_string_list)
