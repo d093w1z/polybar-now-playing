@@ -9,8 +9,11 @@ from unicodedata import east_asian_width
 # (int) : Length of media info string. If length of string exceedes this value, the text will scroll. Default value is 20
 message_display_len = 20
 
+# (bool) Whether to force the output to use font_index
+use_font = False
+
 # (int) : Font index of polybar. this value should be 1 more than the font value specified in polybar config.
-font_index = 1
+font_index = 2
 
 # (float) : Update speed of the text in seconds.
 update_delay = 0.3
@@ -193,14 +196,18 @@ def make_visual_len(text, visual_desired_length):
 
 def print_text():
     global display_text, message_display_len, players, player_names, display_prefix, display_suffix
-    if hide_output and len(players)==0:
-        print("", flush = True)
+
+    if hide_output and len(players) == 0:
+        print("", flush=True)
         return
     scroll()
-    print(display_prefix + " " +
-        "%%{T%d}" % (font_index) +
-        make_visual_len(display_text, message_display_len) +
-        "%{T-}" + display_suffix, flush=True)
+    text = make_visual_len(display_text, message_display_len)
+    if use_font:
+        text = "%%{T%d}" % font_index + text + "%{T-}"
+    print(
+        display_prefix + " " + text + display_suffix,
+        flush=True
+    )
 
 def main():
     global current_player, players
